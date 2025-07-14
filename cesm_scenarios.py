@@ -98,3 +98,33 @@ def make_cesm_study2():
 			"win": StrEq({"low", "intermediate", "high"}, win)
 		}
 	)
+
+
+def make_cesm_study3_three():
+	base_prob = {"purple_low":0.05, "purple_high": 0.9, "orange": 0.95}
+	def draw(event, num_simulations, actuals:set, p:float):
+		sp = compute_sampling_propensity(event, p, actuals)
+		return r.binomial(1, size=num_simulations, p=sp)
+
+	def purple_low(num_simulations, actuals:set, **kwargs):
+		return draw("purple_low", num_simulations, actuals, base_prob["purple_low"])
+	def purple_high(num_simulations, actuals:set, **kwargs):
+		return draw("purple_high", num_simulations, actuals, base_prob["purple_high"])
+	def orange(num_simulations, actuals:set, **kwargs):
+		return draw("orange", num_simulations, actuals, base_prob["orange"])
+
+	def win(purple_low, purple_high, orange):
+		return ((np.logical_or(purple_low, purple_high)) + orange >= 2).astype(purple_low.dtype)
+
+	return CESModel(
+		exovars={"purple_low", "purple_high", "orange"},
+		endovars={"win"},
+		base_prob=base_prob,
+		streq={
+			"purple_low": purple_low,
+			"purple_high": purple_high,
+			"orange": orange,
+			"win": StrEq({"purple_low", "purple_high", "orange"}, win)
+		}
+	)
+cesm_study3_three = make_cesm_study3_three()
