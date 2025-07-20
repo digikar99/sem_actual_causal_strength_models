@@ -24,12 +24,12 @@ class CESModel:
 	# 	self.streq = streq
 
 
-def simulate(cesm:CESModel, actuals:set, num_simulations:int, C):
+def simulate(cesm:CESModel, actuals:set, num_simulations:int, C, stability:float):
 	results = dict()
 
 	def _simulate(var):
 		if var in cesm.exovars:
-			result = cesm.streq[var](num_simulations, actuals, **results)
+			result = cesm.streq[var](num_simulations, actuals, stability=stability, **results)
 		else:
 			streq = cesm.streq[var]
 			deps = streq.deps
@@ -73,13 +73,13 @@ def simulate(cesm:CESModel, actuals:set, num_simulations:int, C):
 
 
 
-def causal_score(cesm:CESModel, actuals:set, C:str, E:str, num_simulations:int = NUM_SIMULATIONS):
+def causal_score(cesm:CESModel, actuals:set, C:str, E:str, num_simulations:int = NUM_SIMULATIONS, stability:float = None):
 	"Computes the causal score k_{C \\to E} of C on E."
 	simulation_results, counterfactual_results = simulate(
-		cesm, actuals, num_simulations, C
+		cesm, actuals, num_simulations, C, stability
 	)
-	pprint.pp(simulation_results)
-	pprint.pp(counterfactual_results)
+	# pprint.pp(simulation_results)
+	# pprint.pp(counterfactual_results)
 	# selection = np.logical_and(simulation_results[E]==0, simulation_results[C]==0)
 	deltaC = np.abs(counterfactual_results[C] - simulation_results[C])
 	deltaE = np.abs(counterfactual_results[E] - simulation_results[E])
