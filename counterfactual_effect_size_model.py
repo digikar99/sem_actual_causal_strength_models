@@ -1,6 +1,7 @@
 import numpy as np
 import pprint
 from dataclasses import dataclass
+import matplotlib.pyplot as plt
 
 NUM_SIMULATIONS=500000
 EPS=1e-7
@@ -88,4 +89,16 @@ def causal_score(cesm:CESModel, actuals:set, C:str, E:str, num_simulations:int =
 	# score = np.sum(deltaE / deltaC)/num_simulations * stdC / (stdE+EPS)
 	score = np.corrcoef(simulation_results[C], simulation_results[E])
 	# /num_simulations * stdC / (stdE+EPS)
-	return score
+	return score[0,1]
+
+def compare_causal_scores(cesm:CESModel, actuals:set, causes:list, E:str, stability:list, num_simulations:int = NUM_SIMULATIONS, plot=False):
+	causal_scores = dict()
+	for s in stability:
+		causal_scores[s] = list()
+		for c in causes:
+			cs = causal_score(cesm, actuals, c, E, num_simulations, stability=s)
+			causal_scores[s].append(cs)
+		plt.plot(causes, causal_scores[s], label="{:.1f}".format(s))
+	plt.ylim(0,1)
+	plt.legend()
+	plt.show()
