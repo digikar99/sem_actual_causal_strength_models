@@ -115,6 +115,75 @@ def make_cesm_study2():
 cesm_study2 = make_cesm_study2()
 
 
+
+def make_cesm_study2_holistic():
+	base_prob = {"low":0.05, "intermediate": 0.5, "high": 0.95}
+	def draw(event, num_simulations, actuals:set, p:float, stability:float):
+		sp = compute_sampling_propensity(event, p, actuals, stability=stability)
+		return r.binomial(1, size=num_simulations, p=sp)
+
+	def low(num_simulations, actuals:set, **kwargs):
+		return draw(
+			"low", num_simulations, actuals, base_prob["low"],
+			stability=kwargs["stability"]
+		)
+	def intermediate(num_simulations, actuals:set, **kwargs):
+		return draw(
+			"intermediate", num_simulations, actuals, base_prob["intermediate"],
+			stability=kwargs["stability"]
+		)
+	def high(num_simulations, actuals:set, **kwargs):
+		return draw(
+			"high", num_simulations, actuals, base_prob["high"],
+			stability=kwargs["stability"]
+		)
+	def low_intermediate(low, intermediate, **kwargs):
+		return (low & intermediate).astype(low.dtype)
+	def low_high(low, high, **kwargs):
+		return (low & high).astype(low.dtype)
+	def intermediate_high(intermediate, high, **kwargs):
+		return (high & intermediate).astype(high.dtype)
+	def low_intermediate_high(low, intermediate, high, **kwargs):
+		return (low & intermediate & high).astype(low.dtype)
+
+	def win(low, intermediate, high, low_intermediate, low_high, intermediate_high, low_intermediate_high):
+		singles = ((low + intermediate + high) >= 2)
+		doubles = ((low_intermediate + low_high + intermediate_high)>=1)
+		triples = ((low_intermediate_high)>=1)
+		return (singles | doubles | triples).astype(low.dtype)
+
+	return CESModel(
+		exovars={"low", "intermediate", "high"},
+		endovars={"win", "low_intermediate", "low_high", "intermediate_high", "low_intermediate_high"},
+		base_prob=base_prob,
+		streq={
+			"low": low,
+			"intermediate": intermediate,
+			"high": high,
+			"low_intermediate": StrEq({"low", "intermediate"}, low_intermediate),
+			"low_high": StrEq({"low", "high"}, low_high),
+			"intermediate_high": StrEq({"high", "intermediate"}, intermediate_high),
+			"low_intermediate_high": StrEq({"low", "intermediate", "high"}, low_intermediate_high),
+			"win": StrEq({
+				"low", "intermediate", "high",
+				"low_intermediate", "low_high", "intermediate_high",
+				"low_intermediate_high"
+			}, win)
+		}
+	)
+cesm_study2_holistic = make_cesm_study2_holistic()
+
+# compare_causal_scores(
+# 	cesm_study2_holistic,
+# 	{"low", "intermediate", "high",
+# 	 "low_intermediate", "low_high", "intermediate_high",
+# 	 "low_intermediate_high"},
+# 	["low_intermediate", "intermediate_high", "low_high"],
+# 	"win",
+# 	stability=np.arange(0,1.1,0.33)
+# )
+
+
 def make_cesm_study3_three():
 	base_prob = {"purple_low":0.05, "purple_high": 0.9, "orange": 0.95}
 	def draw(event, num_simulations, actuals:set, p:float, stability:float):
