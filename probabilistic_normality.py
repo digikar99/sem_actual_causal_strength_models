@@ -1,5 +1,6 @@
 from sympy import symbols, Symbol, Eq, Or, And, Not
 from sympy.abc import A, B, C, D, E, F
+from queue import Queue
 
 def compute_normality(expr, streq:dict, roots_prob:dict):
 	# TODO: Rename roots_prob to be something more meaningful
@@ -30,13 +31,32 @@ def compute_normality_and(expr:And, streq:dict, roots_prob:dict):
 	arg1 = expr.args[1]
 	normality_arg0 = compute_normality_functions[type(arg0)](arg0, streq, roots_prob)
 	normality_arg1 = compute_normality_functions[type(arg1)](arg1, streq, roots_prob)
-	are_independent = check_independence(roots_prob, arg0, arg1)
+	are_independent = check_independence(arg0, arg1, streq, roots_prob)
 	if not are_independent:
 		raise Exception(f"Cannot compute normality (probability) score for non-independent args. sub-expressions of {expr} were determined to be non-independent.")
 	return normality_arg0 * normality_arg1
 
-def check_independence(roots_prob, *args):
-	return all(map(lambda arg: arg.is_symbol and arg in roots_prob, args))
+def get_ancestors(expr, streq):
+	ancestors = set()
+	q = Queue()
+	if expr.is_symbol:
+		q.put(expr)
+	else:
+		for arg in expr.args:
+			q.put(arg)
+	while not q.empty():
+		current = q.get()
+		ancestors.add(current)
+		if current in streq:
+			for arg in streq[current].rhs.args:
+				q.put(arg)
+	return ancestors
+
+def check_independence(args1, args2, streq, roots_prob):
+	anc1 = get_ancestors(args1, streq)
+	anc2 = get_ancestors(args2, streq)
+	if len(anc1 & anc2) > 0: return False
+	else: return True
 
 def compute_normality_or(expr:Or, streq:dict, roots_prob:dict):
 	if (len(expr.args) > 2):
@@ -45,7 +65,7 @@ def compute_normality_or(expr:Or, streq:dict, roots_prob:dict):
 	arg1 = expr.args[1]
 	normality_arg0 = compute_normality_functions[type(arg0)](arg0, streq, roots_prob)
 	normality_arg1 = compute_normality_functions[type(arg1)](arg1, streq, roots_prob)
-	are_independent = check_independence(roots_prob, arg0, arg1)
+	are_independent = check_independence(arg0, arg1, streq, roots_prob)
 	if not are_independent:
 		raise Exception(f"Cannot compute normality (probability) score for non-independent args. sub-expressions of {expr} were determined to be non-independent.")
 	return normality_arg0 + normality_arg1 - normality_arg0 * normality_arg1
