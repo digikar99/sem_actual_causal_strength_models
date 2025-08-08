@@ -2,7 +2,7 @@ from sympy import symbols, Symbol, Eq, Or, And, Not
 from sympy.abc import A, B, C, D, E, F
 from queue import Queue
 
-def compute_normality(expr, streq:dict, roots_prob:dict):
+def compute_normality_score(expr, streq:dict, roots_prob:dict):
 	# TODO: Rename roots_prob to be something more meaningful
 	"""
 	literal: Literal for which the normality measure is to be computed
@@ -39,16 +39,21 @@ def compute_normality_and(expr:And, streq:dict, roots_prob:dict):
 def get_ancestors(expr, streq):
 	ancestors = set()
 	q = Queue()
-	if expr.is_symbol:
+	if type(expr) == Symbol:
 		q.put(expr)
 	else:
 		for arg in expr.args:
+			if type(arg) == Not:
+				arg = Not(arg)
 			q.put(arg)
 	while not q.empty():
+		# print(q.queue)
 		current = q.get()
 		ancestors.add(current)
 		if current in streq:
 			for arg in streq[current].rhs.args:
+				if type(arg) == Not:
+					arg = Not(arg)
 				q.put(arg)
 	return ancestors
 
