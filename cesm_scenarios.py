@@ -1,223 +1,106 @@
-from counterfactual_effect_size_model import StrEq, CESModel
-import numpy.random as r
-import numpy as np
+from counterfactual_effect_size_model import CESModel
+from sympy.abc import A, B, C, D
+from sympy import Symbol, symbols
 
+poison, antidote, survival = symbols("poison, antidote, survival")
+survival_cesm = CESModel(
+	exovar_probs = {poison: 0.1, antidote: 0.1},
+	streq = {
+		survival: antidote | (~poison)
+	}
+)
+# compare_cesm_scores(
+# 	survival_cesm,
+# 	{~poison, antidote},
+# 	[poison, antidote],
+# 	survival,
+# 	[0.2, 0.5, 0.8]
+# )
 
-STABILITY = 0.73
+Win = Symbol("Win")
 
-def compute_sampling_propensity(event:str, prob:float, actual:set, stability:float=None):
-	"""
-	According to the discussion on Extended Structural Model
-	from the section "A formal model of counterfactual sampling".
-	"""
-	if stability is None: stability = STABILITY
-	delta = (event in actual)
-	return stability*delta + (1-stability)*prob
+ql2023_exp1_cesm = CESModel(
+	exovar_probs = {A: 0.1, B: 0.1, C: 0.9, D: 0.9},
+	streq = {
+		Win: (A+B+C+D >= 3)
+	}
+)
 
+# compute_cesm_preds(ql2023_exp1_cesm, 100000, {A,B,C,D,Win}, [A,C], Win, 0.1)
+# compare_cesm_scores(ql2023_exp1_cesm, {A,B,C,D,Win}, [A,C], Win, [0.1, 0.5, 0.9], 100000)
 
+low, intermediate, high = symbols("low intermediate high")
+ql2023_exp2_cesm = CESModel(
+	exovar_probs = {low: 0.05, intermediate: 0.5, high: 0.95},
+	streq = {
+		Win: (low + intermediate + high >= 2)
+	}
+)
 
-def make_survival_cesm(base_prob):
-	def survival(poison, antidote, **kwargs):
-		return np.logical_or(1-poison, antidote).astype(poison.dtype)
+# compare_cesm_scores(
+# 	ql2023_exp2_cesm,
+# 	{low, intermediate, high, Win},
+# 	[low, intermediate, high],
+# 	Win,
+# 	[0.25, 0.5, 0.75]
+# )
+# compare_cesm_scores(
+# 	ql2023_exp2_cesm,
+# 	{low, intermediate, Win},
+# 	[low, intermediate],
+# 	Win,
+# 	[0.25, 0.5, 0.75]
+# )
 
-	def poison(num_simulations, actuals:set, stability=None, **kwargs):
-		sp = compute_sampling_propensity(
-			"poison", base_prob["poison"], actuals, stability=stability
-		)
-		return r.binomial(1, size=num_simulations, p=sp)
+low_intermediate, intermediate_high, low_high = symbols(
+	"low_intermediate intermediate_high low_high"
+)
+can_exp1_nonholistic = ql2023_exp2_cesm
+can_exp1_holistic = CESModel(
+	exovar_probs = {low: 0.05, intermediate: 0.5, high: 0.95},
+	streq = {
+		low_intermediate: (low & intermediate),
+		intermediate_high: (intermediate & high),
+		low_high: (low & high),
+		Win: (low_intermediate | intermediate_high | low_high)
+	}
+)
 
-	def antidote(num_simulations, actuals:set, stability=None, **kwargs):
-		sp = compute_sampling_propensity(
-			"antidote", base_prob["antidote"], actuals, stability=stability
-		)
-		return r.binomial(1, size=num_simulations, p=sp)
-
-	return CESModel(
-		exovars = {"poison", "antidote"},
-		endovars = {"survival"},
-		base_prob = base_prob,
-		streq = {
-			"poison": poison,
-			"antidote": antidote,
-			"survival": StrEq({"poison", "antidote"}, survival)
-		}
-	)
-
-
-def make_cesm_study1():
-	base_prob = {"first":0.1, "second": 0.1, "third": 0.9, "fourth": 0.9}
-	def draw(event, num_simulations, actuals:set, p:float, stability:float):
-		sp = compute_sampling_propensity(event, p, actuals, stability=stability)
-		return r.binomial(1, size=num_simulations, p=sp)
-
-	def first(num_simulations, actuals:set, **kwargs):
-		return draw("first", num_simulations, actuals, base_prob["first"], kwargs["stability"])
-	def second(num_simulations, actuals:set, **kwargs):
-		return draw("second", num_simulations, actuals, base_prob["second"], kwargs["stability"])
-	def third(num_simulations, actuals:set, **kwargs):
-		return draw("third", num_simulations, actuals, base_prob["third"], kwargs["stability"])
-	def fourth(num_simulations, actuals:set, **kwargs):
-		return draw("fourth", num_simulations, actuals, base_prob["fourth"], kwargs["stability"])
-
-	def win(first, second, third, fourth, **kwargs):
-		return ((first + second + third + fourth) >= 3).astype(first.dtype)
-
-	return CESModel(
-		exovars = {"first", "second", "third", "fourth"},
-		endovars = {"win"},
-		base_prob = base_prob,
-		streq = {
-			"first": first,
-			"second": second,
-			"third": third,
-			"fourth": fourth,
-			"win": StrEq({"first", "second", "third", "fourth"}, win)
-		}
-	)
-cesm_study1 = make_cesm_study1()
-
-def make_cesm_study2():
-	base_prob = {"low":0.05, "intermediate": 0.5, "high": 0.95}
-	def draw(event, num_simulations, actuals:set, p:float, stability:float):
-		sp = compute_sampling_propensity(event, p, actuals, stability=stability)
-		return r.binomial(1, size=num_simulations, p=sp)
-
-	def low(num_simulations, actuals:set, **kwargs):
-		return draw(
-			"low", num_simulations, actuals, base_prob["low"],
-			stability=kwargs["stability"]
-		)
-	def intermediate(num_simulations, actuals:set, **kwargs):
-		return draw(
-			"intermediate", num_simulations, actuals, base_prob["intermediate"],
-			stability=kwargs["stability"]
-		)
-	def high(num_simulations, actuals:set, **kwargs):
-		return draw(
-			"high", num_simulations, actuals, base_prob["high"],
-			stability=kwargs["stability"]
-		)
-
-	def win(low, intermediate, high):
-		return ((low + intermediate + high) >= 2).astype(low.dtype)
-
-	return CESModel(
-		exovars={"low", "intermediate", "high"},
-		endovars={"win"},
-		base_prob=base_prob,
-		streq={
-			"low": low,
-			"intermediate": intermediate,
-			"high": high,
-			"win": StrEq({"low", "intermediate", "high"}, win)
-		}
-	)
-cesm_study2 = make_cesm_study2()
-
-
-
-def make_cesm_study2_holistic():
-	base_prob = {"low":0.05, "intermediate": 0.5, "high": 0.95}
-	def draw(event, num_simulations, actuals:set, p:float, stability:float):
-		sp = compute_sampling_propensity(event, p, actuals, stability=stability)
-		return r.binomial(1, size=num_simulations, p=sp)
-
-	def low(num_simulations, actuals:set, **kwargs):
-		return draw(
-			"low", num_simulations, actuals, base_prob["low"],
-			stability=kwargs["stability"]
-		)
-	def intermediate(num_simulations, actuals:set, **kwargs):
-		return draw(
-			"intermediate", num_simulations, actuals, base_prob["intermediate"],
-			stability=kwargs["stability"]
-		)
-	def high(num_simulations, actuals:set, **kwargs):
-		return draw(
-			"high", num_simulations, actuals, base_prob["high"],
-			stability=kwargs["stability"]
-		)
-	def low_intermediate(low, intermediate, **kwargs):
-		return (low & intermediate).astype(low.dtype)
-	def low_high(low, high, **kwargs):
-		return (low & high).astype(low.dtype)
-	def intermediate_high(intermediate, high, **kwargs):
-		return (high & intermediate).astype(high.dtype)
-	def low_intermediate_high(low, intermediate, high, **kwargs):
-		return (low & intermediate & high).astype(low.dtype)
-
-	def win(low, intermediate, high, low_intermediate, low_high, intermediate_high, low_intermediate_high):
-		singles = ((low + intermediate + high) >= 2)
-		doubles = ((low_intermediate + low_high + intermediate_high)>=1)
-		triples = ((low_intermediate_high)>=1)
-		return (singles | doubles | triples).astype(low.dtype)
-
-	return CESModel(
-		exovars={"low", "intermediate", "high"},
-		endovars={"win", "low_intermediate", "low_high", "intermediate_high", "low_intermediate_high"},
-		base_prob=base_prob,
-		streq={
-			"low": low,
-			"intermediate": intermediate,
-			"high": high,
-			"low_intermediate": StrEq({"low", "intermediate"}, low_intermediate),
-			"low_high": StrEq({"low", "high"}, low_high),
-			"intermediate_high": StrEq({"high", "intermediate"}, intermediate_high),
-			"low_intermediate_high": StrEq({"low", "intermediate", "high"}, low_intermediate_high),
-			"win": StrEq({
-				"low", "intermediate", "high",
-				"low_intermediate", "low_high", "intermediate_high",
-				"low_intermediate_high"
-			}, win)
-		}
-	)
-cesm_study2_holistic = make_cesm_study2_holistic()
-
-# compare_causal_scores(
-# 	cesm_study2_holistic,
-# 	{"low", "intermediate", "high",
-# 	 "low_intermediate", "low_high", "intermediate_high",
-# 	 "low_intermediate_high"},
-# 	["low_intermediate", "intermediate_high", "low_high"],
-# 	"win",
+# FIXME: Debug
+# compute_cesm_preds(
+# 	can_exp1_holistic,
+# 	10000,
+# 	{low, intermediate, high},
+# 	[low, intermediate, high, low_intermediate, intermediate_high, low_high],
+# 	Win,
+# 	stability=0.1
+# )
+# compare_cesm_scores(
+# 	can_exp1_holistic,
+# 	{low, intermediate, high},
+# 	[low, intermediate, high, low_intermediate, intermediate_high, low_high],
+# 	Win,
 # 	stability=np.arange(0,1.1,0.33)
 # )
 
-
-def make_cesm_study3_three():
-	base_prob = {"purple_low":0.05, "purple_high": 0.9, "orange": 0.95}
-	def draw(event, num_simulations, actuals:set, p:float, stability:float):
-		sp = compute_sampling_propensity(event, p, actuals, stability=stability)
-		return r.binomial(1, size=num_simulations, p=sp)
-
-	def purple_low(num_simulations, actuals:set, **kwargs):
-		return draw(
-			"purple_low", num_simulations, actuals, base_prob["purple_low"],
-			stability=kwargs["stability"]
-		)
-	def purple_high(num_simulations, actuals:set, **kwargs):
-		return draw(
-			"purple_high", num_simulations, actuals, base_prob["purple_high"],
-			stability=kwargs["stability"]
-		)
-	def orange(num_simulations, actuals:set, **kwargs):
-		return draw(
-			"orange", num_simulations, actuals, base_prob["orange"],
-			stability=kwargs["stability"]
-		)
-
-	def win(purple_low, purple_high, orange):
-		return ((np.logical_or(purple_low, purple_high)) + orange >= 2).astype(purple_low.dtype)
-
-	return CESModel(
-		exovars={"purple_low", "purple_high", "orange"},
-		endovars={"win"},
-		base_prob=base_prob,
-		streq={
-			"purple_low": purple_low,
-			"purple_high": purple_high,
-			"orange": orange,
-			"win": StrEq({"purple_low", "purple_high", "orange"}, win)
-		}
-	)
-cesm_study3_three = make_cesm_study3_three()
+purple_low, purple_high, orange = symbols("purple_low, purple_high, orange")
+ql2023_exp3_cesm = CESModel(
+	exovar_probs = {purple_low: 0.05, purple_high: 0.9, orange: 0.95},
+	streq = {
+		Win: ((purple_low | purple_high) & orange)
+	}
+)
+# compare_cesm_scores(
+# 	ql2023_exp3_cesm,
+# 	{purple_low, orange, Win},
+# 	[purple_low, orange],
+# 	Win,
+# 	[0.2, 0.5, 0.8]
+# )
+# compare_cesm_scores(
+# 	ql2023_exp3_cesm,
+# 	{purple_low, purple_high, orange, Win},
+# 	[purple_low, purple_high, orange],
+# 	Win,
+# 	[0.2, 0.5, 0.8]
+# )
