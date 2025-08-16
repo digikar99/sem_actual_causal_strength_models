@@ -4,10 +4,14 @@ import matplotlib.pyplot as plt
 from sympy import lambdify, Symbol
 from dataclasses import dataclass
 from structural_equation_model import SEModel, StrEq, compute_sem_preds
+from sys import platform
 
 NUM_SIMULATIONS=500000
 
 np.set_printoptions(threshold=10)
+if platform == "darwin":
+	import matplotlib
+	matplotlib.use("qtagg")
 
 class CESModel(SEModel):
 	def __init__(self, streq, exovar_probs, exovars=None, endovars=None):
