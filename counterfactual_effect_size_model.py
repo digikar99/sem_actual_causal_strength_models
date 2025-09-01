@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from sympy import lambdify, Symbol
 from dataclasses import dataclass
 from structural_equation_model import SEModel, StrEq, compute_sem_preds
+from factual_difference_making import FDMModel
 from sys import platform
 
 NUM_SIMULATIONS=500000
@@ -14,28 +15,39 @@ if platform == "darwin":
 	matplotlib.use("qtagg")
 
 class CESModel(SEModel):
-	def __init__(self, streq, exovar_probs, exovars=None, endovars=None):
+	def __init__(self, actuals, streq, exovar_probs, exovars=None, endovars=None):
 		super().__init__(streq, exovars=exovars, endovars=endovars)
 
 		if self.exovars != set(exovar_probs.keys()):
 			raise Exception(f"Expected probababilities for all exovars {self.exovars}")
 		else:
 			self.exovar_probs = exovar_probs
+		self.actuals = actuals
 
 	def __repr__(self):
 		space = "\n\t"
 		_streq = dict()
 		for eq in self.streq:
 			_streq[eq] = self.streq[eq].rhs
-		return f"CESModel({space}exovars={self.exovars},{space}exovar_probs={self.exovar_probs},{space}endovars={self.endovars},{space}streq={_streq}\n)"
+		return f"CESModel({space}actuals={self.actuals},{space}exovars={self.exovars},{space}exovar_probs={self.exovar_probs},{space}endovars={self.endovars},{space}streq={_streq}\n)"
 
-def compute_sampling_propensity(event:Symbol, prob:float, actual:set, stability:float=None):
+def as_cesmodel(model):
+	if type(model) == FDMModel:
+		return CESModel(
+			actuals = model.literals,
+			streq = model._streq,
+			exovar_probs = model.relative_normality
+		)
+	else:
+		raise Exception("as_cesmodel not implemented for", type(model))
+
+def compute_sampling_propensity(event:Symbol, prob:float, actuals:set, stability:float=None):
 	"""
 	According to the discussion on Extended Structural Model
 	from the section "A formal model of counterfactual sampling".
 	"""
 	if stability is None: stability = STABILITY
-	delta = (event in actual)
+	delta = (event in actuals)
 	return stability*delta + (1-stability)*prob
 
 def draw(event, num_simulations, actuals:set, p:float, stability:float):
@@ -45,7 +57,6 @@ def draw(event, num_simulations, actuals:set, p:float, stability:float):
 def compute_cesm_preds(
 		cesm:CESModel,
 		num_simulations:int,
-		actuals:set,
 		candidate_causes:list,
 		effect:Symbol,
 		stability:float=0.73
@@ -53,7 +64,7 @@ def compute_cesm_preds(
 	exovar_samples = dict()
 	for var in cesm.exovars:
 		exovar_samples[var] = draw(
-			var, num_simulations, actuals, cesm.exovar_probs[var],
+			var, num_simulations, cesm.actuals, cesm.exovar_probs[var],
 			stability
 		)
 
@@ -75,17 +86,20 @@ def compute_cesm_preds(
 		strengths.append(strength)
 	return strengths
 
-def compare_cesm_scores(cesm:CESModel, actuals:set, causes:list, E:Symbol, stability:list, num_simulations:int = NUM_SIMULATIONS, plot=False):
+def compare_cesm_scores(cesm:CESModel, causes:list, effect:Symbol, stability:list, num_simulations:int = NUM_SIMULATIONS, plot=False):
 	causal_scores = dict()
 	cause_names = [c.name for c in causes]
 	for s in stability:
 		causal_scores[s] = list()
 		scores = compute_cesm_preds(
-			cesm, num_simulations, actuals, causes, E, s
+			cesm, num_simulations, causes, effect, s
 		)
 		for c, cs in zip(causes, scores):
 			causal_scores[s].append(cs)
-		plt.plot(cause_names, causal_scores[s], label="{:.1f}".format(s))
-	plt.ylim(0,1)
-	plt.legend()
-	plt.show()
+		if plot:
+			plt.plot(cause_names, causal_scores[s], label="{:.1f}".format(s))
+	if plot:
+		plt.ylim(0,1)
+		plt.legend()
+		plt.show()
+	return causal_scores
