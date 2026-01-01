@@ -1,4 +1,4 @@
-from counterfactual_effect_size_model import CESModel
+from counterfactual_effect_size_model import CESModel, compute_cesm_preds, compare_cesm_scores
 from sympy.abc import A, B, C, D, E, R, U
 from sympy import Symbol, symbols
 
