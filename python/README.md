@@ -23,6 +23,8 @@ But the repository (directory) has since expanded to also contain:
 - [Sympy: A Quick Tutorial](#sympy-a-quick-tutorial)
 - [Demonstration of factual\_difference\_making](#demonstration-of-factual_difference_making)
 - [Counterfactual Effect Size Model (CESM)](#counterfactual-effect-size-model-cesm)
+    - [Example usage](#example-usage)
+    - [Given scenarios](#given-scenarios)
 - [References](#references)
 
 <!-- markdown-toc end -->
@@ -230,16 +232,102 @@ Several scenarios are included in [./fdm\_scenarios.py](./fdm_scenarios.py) and 
 
 ### Counterfactual Effect Size Model (CESM)
 
-A version of the CESM described by Quillien & Lucas (2023) is implemented in [cesm\_analogous\_scenario.py](cesm_analogous_scenario.py).
+A version of the CESM described in the supplementary information to Quillien & Lucas (2023) is implemented in [counterfactual\_effect\_size\_model.py](./counterfactual_effect_size_model.py) with scenarios in [cesm\_scenarios.py](cesm_scenarios.py). There are three main functionalities:
 
-```sh
-$ python cesm_analogous_scenario.py
-Survival Scenario
-    Poison (or its lack) is a cause: 0.048166222824911176
-    Antidote (or its lack) is a cause: 0.004782446789884183
-Death Scenario
-    Poison (or its lack) is a cause: 0.960360193169354
-    Antidote (or its lack) is a cause: 1.0531141052550403
+- [CESModel](./counterfactual_effect_size_model.py#L18-L43): This is the python class to encode the actual causal scenarios
+- [compute\_cesm\_preds](./counterfactual_effect_size_model.py#L68-L114): This function takes in the following arguments and returns a list of CES causal judgments for each of the candidate causes:
+    - cesm: an instance of CESModel
+    - candidate_causes: a list of symbols representing the causes of which judgments are to be computed
+    - effect: a symbol towards which causal judgment is to be computed
+    - stability: the stability parameter of CES Model, default value 0.73
+    - num_simulations: an integer, default value 500000
+- [compare\_cesm\_preds](./counterfactual_effect_size_model.py#L116-L142): This is similar to `compute_cesm_preds` but it takes in a *list* of stability values instead of a single parameter. Additionally, it also has a `plot` parameter. If `plot` is `True`, the predictions across different stability values are plotted on the graph.
+
+#### Example usage
+
+Example usage of the above three functions follows:
+
+```python
+import pprint
+from sympy.abc import A, B, C, D, E
+from counterfactual_effect_size_model import CESModel, compute_cesm_preds, compare_cesm_scores
+
+cesm_example = CESModel(
+	actuals = {A, B, C, E},
+	exovar_probs = {A: 0.1, B: 0.2, C: 0.4, D: 0.1},
+	streq = {
+		E: A & (B | C) & ~D
+	}
+)
+
+scores = compute_cesm_preds(cesm_example, [A, B, C, D], E, 0.7)
+
+multiple_scores = compare_cesm_scores(cesm_example, [A, D], E, [0.1, 0.5, 0.9], plot=True)
+
+print(cesm_example)
+pprint.pp(scores)
+pprint.pp(multiple_scores)
+```
+
+The above will print the following:
+
+```
+CESModel(
+	actuals={B, E, A, C},
+	exovars={B, A, D, C},
+	exovar_probs={A: 0.1, B: 0.2, C: 0.4, D: 0.1},
+	endovars={E},
+	streq={E: A & ~D & (B | C)}
+)
+[0.8822947310136721,
+ 0.11661130611234129,
+ 0.13924593447358163,
+ 0.2537049270209159]
+{0.1: [0.20072910878713288, 0.10833964333745462],
+ 0.5: [0.19160244467423573, 0.2110518532388487],
+ 0.9: [0.057301934427855535, 0.29894824528730846]}
+```
+
+And plot the graph:
+
+![cesm\_example.svg](./cesm_example.svg)
+
+#### Given scenarios
+
+A number of scenarios are encoded as CESModels in [cesm\_scenarios.py](./cesm_scenarios.py). These can be tried out by starting the python REPL (say, ipython) in the current directory.
+
+```
+ipython
+```
+
+And then loading the file with `%load` magic command:
+
+```
+Python 3.10.14 (main, Mar 21 2024, 16:24:04) [GCC 11.2.0]
+Type 'copyright', 'credits' or 'license' for more information
+IPython 8.20.0 -- An enhanced Interactive Python. Type '?' for help.
+
+In [1]: %load cesm_scenarios.py
+.
+.
+.
+   ...: 
+
+In [3]: compute_cesm_preds(tadeg_example, [A], E, 0.7)
+Out[3]: [0.8815847792486272]
+
+In [4]: compare_cesm_preds(tadeg_example, [B,D], E, [0.1, 0.5, 0.9])
+Out[4]: 
+{0.1: [0.13621218857748088, 0.10773595682399688],
+ 0.5: [0.15434755362037963, 0.21211084515899076],
+ 0.9: [0.04779874182336246, 0.29568345646915256]}
+
+In [5]: compare_cesm_preds(tadeg_example, [B,D], E, [0.1, 0.5, 0.9], plot=True)
+Out[5]: 
+{0.1: [0.13620669467752805, 0.10857909539791742],
+ 0.5: [0.15388884915057188, 0.21066856586803984],
+ 0.9: [0.04846425807415143, 0.2962318523452058]}
+
 ```
 
 # References
