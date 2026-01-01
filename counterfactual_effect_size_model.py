@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from structural_equation_model import SEModel, StrEq, compute_sem_preds
 from factual_difference_making import FDMModel
 from sys import platform
+from pprint import pp
 
 NUM_SIMULATIONS=500000
 
@@ -52,7 +53,7 @@ def compute_sampling_propensity(event:Symbol, prob:float, actuals:set, stability
 
 def draw(event, num_simulations, actuals:set, p:float, stability:float):
 	sp = compute_sampling_propensity(event, p, actuals, stability=stability)
-	return r.binomial(1, size=num_simulations, p=sp)
+	return r.binomial(1, size=num_simulations, p=sp).astype("int8")
 
 def compute_cesm_preds(
 		cesm:CESModel,
@@ -61,6 +62,9 @@ def compute_cesm_preds(
 		effect:Symbol,
 		stability:float=0.73
 ):
+	# int8 is the appropriate data type, because during the sum of the delta below,
+	#   spurious positive and negative effects can then sum up to zero.
+	# uint8 or bool would not allow such summing up the deltas to zero.
 	exovar_samples = dict()
 	for var in cesm.exovars:
 		exovar_samples[var] = draw(
@@ -83,6 +87,8 @@ def compute_cesm_preds(
 		strength = np.mean(
 			delta_eff / delta_var * std_var / std_eff
 		)
+		# strength = np.sum(delta_eff / delta_var) * std_var / std_eff / num_simulations
+		# strength = np.corrcoef(initial_preds[var], initial_preds[effect])[0,1]
 		strengths.append(strength)
 	return strengths
 

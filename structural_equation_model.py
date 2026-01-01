@@ -62,7 +62,7 @@ def compute_sem_preds(sem:SEModel, exovars:dict):
 
 	result = dict()
 	for var in exovars:
-		result[var] = np.array(exovars[var], dtype="uint8")
+		result[var] = np.array(exovars[var], dtype="int8")
 	result_vars = set(exovars.keys())
 
 	def _compute(seq:StrEq):
@@ -73,9 +73,11 @@ def compute_sem_preds(sem:SEModel, exovars:dict):
 		kwargs = dict()
 		for arg in seq.args:
 			kwargs[arg.name] = result[arg]
-		result[seq.lhs] = (seq.fn(**kwargs)).astype("uint8")
+		result[seq.lhs] = (seq.fn(**kwargs)).astype("int8")
 
-	for var in sem.endovars: _compute(sem.streq[var])
+	for var in (sem.endovars - result_vars):
+		_compute(sem.streq[var])
+
 	return result
 
 
