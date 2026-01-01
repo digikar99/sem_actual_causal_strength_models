@@ -2,20 +2,33 @@ from counterfactual_effect_size_model import CESModel
 from sympy.abc import A, B, C, D, E, R, U
 from sympy import Symbol, symbols
 
-poison, antidote, survival = symbols("poison, antidote, survival")
-survival_cesm = CESModel(
-	actuals = {~poison, antidote},
-	exovar_probs = {poison: 0.1, antidote: 0.1},
+
+tadeg_example = CESModel(
+	actuals = {A, B, C, E},
+	exovar_probs = {A: 0.1, B: 0.2, C: 0.4, D: 0.1},
 	streq = {
-		survival: antidote | (~poison)
+		E: A & (B | C) & ~D
 	}
 )
-# compare_cesm_scores(
-# 	survival_cesm,
-# 	[poison, antidote],
-# 	survival,
-# 	[0.2, 0.5, 0.8]
-# )
+# compute_cesm_preds(tadeg_example, 100000, [A], E, 0.7)
+
+m2019_conj_cesm = CESModel(
+	actuals = {A, B, E},
+	exovar_probs = {A: 0.1, B: 0.9},
+	streq = {
+		E: A & B
+	}
+)
+# compute_cesm_preds(m2019_conj_cesm, 100000, [A, B], E, 0.7)
+
+m2019_disj_cesm = CESModel(
+	actuals = {A, B, E},
+	exovar_probs = {A: 0.1, B: 0.9},
+	streq = {
+		E: A | B
+	}
+)
+# compute_cesm_preds(m2019_disj_cesm, 100000, [A, B], E, 0.7)
 
 Win = Symbol("Win")
 
@@ -54,41 +67,12 @@ ql2023_exp2b_cesm = CESModel(
 		Win: (low + intermediate + high >= 2)
 	}
 )
+# compute_cesm_preds(ql2023_exp2b_cesm, 100000, [low, intermediate], Win, 0.7)
 # compare_cesm_scores(
 # 	ql2023_exp2b_cesm,
 # 	[low, intermediate],
 # 	Win,
 # 	[0.25, 0.5, 0.75]
-# )
-
-low_intermediate, intermediate_high, low_high = symbols(
-	"low_intermediate intermediate_high low_high"
-)
-can_exp1_nonholistic = ql2023_exp2a_cesm
-can_exp1_holistic = CESModel(
-	actuals = {low, intermediate, high},
-	exovar_probs = {low: 0.05, intermediate: 0.5, high: 0.95},
-	streq = {
-		low_intermediate: (low & intermediate),
-		intermediate_high: (intermediate & high),
-		low_high: (low & high),
-		Win: (low_intermediate | intermediate_high | low_high)
-	}
-)
-
-# FIXME: Debug
-# compute_cesm_preds(
-# 	can_exp1_holistic,
-# 	10000,
-# 	[low, intermediate, high, low_intermediate, intermediate_high, low_high],
-# 	Win,
-# 	stability=0.1
-# )
-# compare_cesm_scores(
-# 	can_exp1_holistic,
-# 	[low, intermediate, high, low_intermediate, intermediate_high, low_high],
-# 	Win,
-# 	stability=np.arange(0,1.1,0.33)
 # )
 
 purple_low, purple_high, orange = symbols("purple_low, purple_high, orange")
@@ -138,36 +122,6 @@ for actuals in [{top, left, right, Win}, {top, left, Win}]:
 			)
 # for idx, model in enumerate(ql2023_exp4_cesm):
 # 	print(compute_cesm_preds(model, 100000, [top], Win, 0.7))
-
-# compute_cesm_preds(ql2023_exp4_cesm_09, 100000, [top], Win, 0.7)
-
-tadeg_example_1 = CESModel(
-	actuals = {A, B, C, E},
-	exovar_probs = {A: 0.1, B: 0.2, C: 0.4, D: 0.1},
-	streq = {
-		E: A & (B | C) & ~D
-	}
-)
-# compute_cesm_preds(tadeg_example_1, 100000, [A], E, 0.7)
-
-tadeg_example_2 = [
-	CESModel(
-		actuals = {A, B, E},
-		exovar_probs = {A: 0.1, B: 0.9},
-		streq = {
-			E: A & B
-		}
-	),
-	CESModel(
-		actuals = {A, B, E},
-		exovar_probs = {A: 0.1, B: 0.9},
-		streq = {
-			E: A | B
-		}
-	)
-]
-# compute_cesm_preds(tadeg_example_2[0], 100000, [A, B], E, 0.7)
-# compute_cesm_preds(tadeg_example_2[1], 100000, [A, B], E, 0.7)
 
 gi2020_xor_cesm = [
 	CESModel(
