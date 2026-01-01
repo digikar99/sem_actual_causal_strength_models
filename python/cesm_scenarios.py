@@ -1,4 +1,4 @@
-from counterfactual_effect_size_model import CESModel, compute_cesm_preds, compare_cesm_scores
+from counterfactual_effect_size_model import CESModel, compute_cesm_preds, compare_cesm_preds
 from sympy.abc import A, B, C, D, E, R, U
 from sympy import Symbol, symbols
 
@@ -10,7 +10,7 @@ tadeg_example = CESModel(
 		E: A & (B | C) & ~D
 	}
 )
-# compute_cesm_preds(tadeg_example, 100000, [A], E, 0.7)
+# compute_cesm_preds(tadeg_example, [A], E, 0.7)
 
 m2019_conj_cesm = CESModel(
 	actuals = {A, B, E},
@@ -19,7 +19,7 @@ m2019_conj_cesm = CESModel(
 		E: A & B
 	}
 )
-# compute_cesm_preds(m2019_conj_cesm, 100000, [A, B], E, 0.7)
+# compute_cesm_preds(m2019_conj_cesm, [A, B], E, 0.7)
 
 m2019_disj_cesm = CESModel(
 	actuals = {A, B, E},
@@ -28,7 +28,7 @@ m2019_disj_cesm = CESModel(
 		E: A | B
 	}
 )
-# compute_cesm_preds(m2019_disj_cesm, 100000, [A, B], E, 0.7)
+# compute_cesm_preds(m2019_disj_cesm, [A, B], E, 0.7)
 
 Win = Symbol("Win")
 
@@ -40,8 +40,8 @@ ql2023_exp1_cesm = CESModel(
 	}
 )
 
-# compute_cesm_preds(ql2023_exp1_cesm, 100000, [A,C], Win, 0.1)
-# compare_cesm_scores(ql2023_exp1_cesm, [A,C], Win, [0.1, 0.5, 0.9], 100000)
+# compute_cesm_preds(ql2023_exp1_cesm, [A,C], Win, 0.1)
+# compare_cesm_preds(ql2023_exp1_cesm, [A,C], Win, [0.1, 0.5, 0.9], 100000)
 
 low, intermediate, high = symbols("low intermediate high")
 ql2023_exp2a_cesm = CESModel(
@@ -51,9 +51,9 @@ ql2023_exp2a_cesm = CESModel(
 		Win: (low + intermediate + high >= 2)
 	}
 )
-# compute_cesm_preds(ql2023_exp2a_cesm, 100000, [low, intermediate, high], Win, 0.7)
+# compute_cesm_preds(ql2023_exp2a_cesm, [low, intermediate, high], Win, 0.7)
 
-# compare_cesm_scores(
+# compare_cesm_preds(
 # 	ql2023_exp2a_cesm,
 # 	[low, intermediate, high],
 # 	Win,
@@ -67,8 +67,8 @@ ql2023_exp2b_cesm = CESModel(
 		Win: (low + intermediate + high >= 2)
 	}
 )
-# compute_cesm_preds(ql2023_exp2b_cesm, 100000, [low, intermediate], Win, 0.7)
-# compare_cesm_scores(
+# compute_cesm_preds(ql2023_exp2b_cesm, [low, intermediate], Win, 0.7)
+# compare_cesm_preds(
 # 	ql2023_exp2b_cesm,
 # 	[low, intermediate],
 # 	Win,
@@ -83,8 +83,8 @@ ql2023_exp3_two_cesm = CESModel(
 		Win: ((purple_low | purple_high) & orange)
 	}
 )
-# compute_cesm_preds(ql2023_exp3_two_cesm, 100000, [purple_low, orange], Win, 0.7)
-# compare_cesm_scores(
+# compute_cesm_preds(ql2023_exp3_two_cesm, [purple_low, orange], Win, 0.7)
+# compare_cesm_preds(
 # 	ql2023_exp3_two_cesm,
 # 	[purple_low, orange],
 # 	Win,
@@ -98,8 +98,8 @@ ql2023_exp3_three_cesm = CESModel(
 		Win: ((purple_low | purple_high) & orange)
 	}
 )
-# compute_cesm_preds(ql2023_exp3_three_cesm, 100000, [purple_low, purple_high, orange], Win, 0.7)
-# compare_cesm_scores(
+# compute_cesm_preds(ql2023_exp3_three_cesm, [purple_low, purple_high, orange], Win, 0.7)
+# compare_cesm_preds(
 # 	ql2023_exp3_three_cesm,
 # 	[purple_low, purple_high, orange],
 # 	Win,
@@ -121,7 +121,7 @@ for actuals in [{top, left, right, Win}, {top, left, Win}]:
 				)
 			)
 # for idx, model in enumerate(ql2023_exp4_cesm):
-# 	print(compute_cesm_preds(model, 100000, [top], Win, 0.7))
+# 	print(compute_cesm_preds(model, [top], Win, 0.7))
 
 gi2020_xor_cesm = [
 	CESModel(
@@ -139,8 +139,8 @@ gi2020_xor_cesm = [
 		}
 	)
 ]
-# compute_cesm_preds(gi2020_xor_cesm[0], 100000, [A, B], E, 0.7)
-# compute_cesm_preds(gi2020_xor_cesm[1], 100000, [A, B], E, 0.7)
+# compute_cesm_preds(gi2020_xor_cesm[0], [A, B], E, 0.7)
+# compute_cesm_preds(gi2020_xor_cesm[1], [A, B], E, 0.7)
 
 oneill2025_dp_cesm = CESModel(
 	actuals = {E, U, C, D},
@@ -150,7 +150,7 @@ oneill2025_dp_cesm = CESModel(
 		R: U & ~D
 	}
 )
-# compute_cesm_preds(oneill2025_dp_cesm, 100000, [C, D], E, 0.7)
+# compute_cesm_preds(oneill2025_dp_cesm, [C, D], E, 0.7)
 
 confounded_cesm = CESModel(
 	actuals = {A, C, E},
@@ -160,7 +160,7 @@ confounded_cesm = CESModel(
 		C: A
 	}
 )
-# compute_cesm_preds(confounded_cesm, 100000, [C], E, 0.7)
+# compute_cesm_preds(confounded_cesm, [C], E, 0.7)
 
 nonconfounded_cesm = CESModel(
 	actuals = {A, C, E},
@@ -169,8 +169,8 @@ nonconfounded_cesm = CESModel(
 		E: A & C
 	}
 )
-# compute_cesm_preds(nonconfounded_cesm, 100000, [C], E, 0.7)
-# compute_cesm_preds(nonconfounded_cesm, 100000, [E], C, 0.7)
+# compute_cesm_preds(nonconfounded_cesm, [C], E, 0.7)
+# compute_cesm_preds(nonconfounded_cesm, [E], C, 0.7)
 
 intconf_one_cesm = CESModel(
 	actuals = {A, C, E},
@@ -180,7 +180,7 @@ intconf_one_cesm = CESModel(
 		C: A | B
 	}
 )
-# compute_cesm_preds(intconf_one_cesm, 100000, [A, C], E, 0.7)
+# compute_cesm_preds(intconf_one_cesm, [A, C], E, 0.7)
 
 intconf_two_cesm = CESModel(
 	actuals = {A, B, C, E},
@@ -190,4 +190,4 @@ intconf_two_cesm = CESModel(
 		C: A | B
 	}
 )
-# compute_cesm_preds(intconf_two_cesm, 100000, [A, C], E, 0.7)
+# compute_cesm_preds(intconf_two_cesm, [A, C], E, 0.7)
