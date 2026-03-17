@@ -1,9 +1,8 @@
 import numpy as np
 import numpy.random as r
 import matplotlib.pyplot as plt
-from sympy import lambdify, Symbol
-from dataclasses import dataclass
-from structural_equation_model import SEModel, StrEq, compute_sem_preds
+from sympy import Symbol
+from structural_equation_model import SEModel, compute_sem_preds
 from factual_difference_making import FDMModel
 from sys import platform
 from pprint import pp
@@ -135,6 +134,10 @@ def compare_cesm_preds(cesm:CESModel, causes:list, effect:Symbol, stability:list
 			causal_scores[s].append(cs)
 		if plot:
 			plt.plot(cause_names, causal_scores[s], label="{:.1f}".format(s))
+		causal_scores_list = causal_scores[s]
+		causal_scores[s] = dict()
+		for c, cs in zip(causes, scores):
+			causal_scores[s][c] = cs
 	if plot:
 		plt.ylim(0,1)
 		plt.legend()
