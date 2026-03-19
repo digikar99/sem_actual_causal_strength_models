@@ -13,17 +13,23 @@ class StrEq:
 
 class SEModel:
 
-	def __init__(self, streq, exovars=None, endovars=None):
+	def __init__(self, streq, exovar_probs, exovars=None, endovars=None):
 		check_endovars(self, streq, endovars)
 		self.streq = process_streq(streq)
 		check_exovars(self, streq, exovars)
+
+		if self.exovars != set(exovar_probs.keys()):
+			raise Exception(f"Expected probababilities for all exovars {self.exovars}")
+		else:
+			self.exovar_probs = exovar_probs
+
 
 	def __repr__(self):
 		space = "\n\t"
 		_streq = dict()
 		for eq in self.streq:
 			_streq[eq] = self.streq[eq].rhs
-		return f"SEModel({space}exovars={self.exovars},{space}endovars={self.endovars},{space}streq={_streq}\n)"
+		return f"SEModel({space}exovars={self.exovars},{space}endovars={self.endovars},{space}exovar_probs={self.exovar_probs},{space}streq={_streq}\n)"
 
 def check_endovars(sem:SEModel, streq, endovars):
 	inferred_endovars = set(streq.keys())
@@ -80,6 +86,29 @@ def compute_sem_preds(sem:SEModel, exovars:dict):
 
 	return result
 
+
+
+class ActualSEModel(SEModel):
+	"""
+	Encodes the actual causal scenario.
+
+	- actuals: a set of symbols
+	- exovar_probs: a dict mapping a symbol representing an exogeneous variable
+		to its probability of occurrence
+	- streq: a dict mapping each endogeneous variable to the RHS of the structural equation
+
+	See actual_causal_scenarios.py for examples.
+	"""
+	def __init__(self, actuals, streq, exovar_probs, exovars=None, endovars=None):
+		super().__init__(streq, exovar_probs=exovar_probs, exovars=exovars, endovars=endovars)
+		self.actuals = actuals
+
+	def __repr__(self):
+		space = "\n\t"
+		_streq = dict()
+		for eq in self.streq:
+			_streq[eq] = self.streq[eq].rhs
+		return f"ActualSEModel({space}actuals={self.actuals},{space}exovars={self.exovars},{space}exovar_probs={self.exovar_probs},{space}endovars={self.endovars},{space}streq={_streq}\n)"
 
 # from sympy.abc import A,B,C,D,E
 
