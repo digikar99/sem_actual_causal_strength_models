@@ -181,20 +181,20 @@ Eq(E, A | C)
 A version of the CESM described in the supplementary information to Quillien & Lucas (2023) and NSM described in Icard et al. (2017) is implemented in [sem\_actual\_causal\_strength\_models.py](./sem_actual_causal_strength_models.py) with scenarios in [actual\_causal\_scenarios.py](actual_causal_scenarios.py). Main functionalities include:
 
 - [ActualSEModel](): This is the python class to encode the actual causal scenarios
-- [compute\_cesm\_preds](./counterfactual_effect_size_model.py#L68-L114): This function takes in the following arguments and returns a list of CES causal judgments for each of the candidate causes:
+- [compute\_cesm\_preds](https://github.com/digikar99/sem_actual_causal_strength_models/blob/8b9581f78bc2083ccd4ab844ecfd3225a89bba84/sem_actual_causal_strength_models.py#L29-L75): This function takes in the following arguments and returns a list of CES causal judgments for each of the candidate causes:
     - cesm: an instance of CESModel
     - candidate_causes: a list of symbols representing the causes of which judgments are to be computed
     - effect: a symbol towards which causal judgment is to be computed
     - stability: the stability parameter of CES Model, default value 0.73
     - num_simulations: an integer, default value 500000
-- [compute\_nsm\_preds](): Its arguments are exactly the same as `compute_cesm_preds`.
-- [compare\_preds](): It takes in the following arguments and prints the model as well as the causal strength predictions for each of the candidate causes towards effect:
+- [compute\_nsm\_preds](https://github.com/digikar99/sem_actual_causal_strength_models/blob/8b9581f78bc2083ccd4ab844ecfd3225a89bba84/sem_actual_causal_strength_models.py#L77-L142): Its arguments are exactly the same as `compute_cesm_preds`.
+- [compare\_preds](https://github.com/digikar99/sem_actual_causal_strength_models/blob/8b9581f78bc2083ccd4ab844ecfd3225a89bba84/sem_actual_causal_strength_models.py#L187-L196): It takes in the following arguments and prints the model as well as the causal strength predictions for each of the candidate causes towards effect:
     - methods: A list of methods that can be used to compare predictions. These are currently limited to "cesm" and "nsm".
     - model: An instance of ActualSEModel
     - causes: A list of causes as symbols from sympy
     - effect: The symbol towards which the causal strengths are to be computed
     - stability: Stability parameter used for computation (default: 0.73)
-- [compare\_stability](./counterfactual_effect_size_model.py#L116-L142): While `compare_preds` compares the predictions across different models, `compare_stability` compares the predictions of a given model ("cesm" or "nsm") across different values of the stability parameter. It takes in the following arguments and returns a list of CES causal judgments for each of the candidate causes:
+- [compare\_stability](https://github.com/digikar99/sem_actual_causal_strength_models/blob/8b9581f78bc2083ccd4ab844ecfd3225a89bba84/sem_actual_causal_strength_models.py#L154-L185): While `compare_preds` compares the predictions across different models, `compare_stability` compares the predictions of a given model ("cesm" or "nsm") across different values of the stability parameter. It takes in the following arguments and returns a list of CES causal judgments for each of the candidate causes:
     - method: one of "cesm" or "nsm"
     - model: an instance of ActualSEModel
     - causes: a list of symbols representing the causes of which judgments are to be computed
