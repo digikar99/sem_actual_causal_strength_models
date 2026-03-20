@@ -1,11 +1,11 @@
 
-This repository was originally a part of [digikar99/factual-difference-making](https://github.com/digikar99/factual_difference_making) (private at the time of this writing), but has since been [`filter-repo`-ed](https://github.com/newren/git-filter-repo) into a separate repository. 
+This repository was originally a part of [digikar99/factual-difference-making](https://github.com/digikar99/factual_difference_making) (private at the time of this writing), but has since been [`filter-repo`-ed](https://github.com/newren/git-filter-repo) into a separate repository.
 
 It now contains:
 
 - [structural\_equation\_model.py](./structural_equation_model.py)): a basic implementation of structural equations
 - [sem\_actual\_causal\_strength\_models.py](./sem_actual_causal_strength_models.py): a (WIP?) implementation of the CES and NS model of counterfactual judgments,
-  - The empirical work for CES is described [here](https://www.pure.ed.ac.uk/ws/portalfiles/portal/431176760/Counterfactuals_QUILLIEN_DOA16022023_AFV_CC_BY.pdf) and implementation [here](https://osf.io/h42f7/files/vnh84). 
+  - The empirical work for CES is described [here](https://www.pure.ed.ac.uk/ws/portalfiles/portal/431176760/Counterfactuals_QUILLIEN_DOA16022023_AFV_CC_BY.pdf) and implementation [here](https://osf.io/h42f7/files/vnh84).
   - The NS model is described [here](https://www.sciencedirect.com/science/article/pii/S0010027717300100) along with a few experiments
 - A number of scenarios are encoded in [actual\_causal\_scenarios.py](./actual_causal_scenarios.py). Thanks to Tadeg for providing the R implementation for many of these. The R implementation of CES and NS models of causal judgments is at [tadegquillien/causal-judgment](https://github.com/tadegquillien/causal-judgment).
 
@@ -29,7 +29,7 @@ It now contains:
 
 ### Setting up the programming environment
 
-The program is currently developed in python. Python package dependencies are listed in [requirements.txt](./requirements.txt). 
+The program is currently developed in python. Python package dependencies are listed in [requirements.txt](./requirements.txt).
 
 #### 1. Installing python and packages
 
@@ -82,25 +82,25 @@ This should produce the below output:
 
 ```
 ActualSEModel(
-	actuals={A, B, E, C},
-	exovars={A, B, C, D},
-	exovar_probs={A: 0.1, B: 0.2, C: 0.4, D: 0.1},
-	endovars={E},
-	streq={E: A & ~D & (B | C)}
+    actuals={A, B, E, C},
+    exovars={A, B, C, D},
+    exovar_probs={A: 0.1, B: 0.2, C: 0.4, D: 0.1},
+    endovars={E},
+    streq={E: A & ~D & (B | C)}
 )
 CESM: [np.float64(0.8817343989170583)]
 ActualSEModel(
-	actuals={Win, B, A, C, D},
-	exovars={A, B, C, D},
-	exovar_probs={A: 0.1, B: 0.1, C: 0.9, D: 0.9},
-	endovars={Win},
-	streq={Win: A + B + C + D >= 3}
+    actuals={Win, B, A, C, D},
+    exovars={A, B, C, D},
+    exovar_probs={A: 0.1, B: 0.1, C: 0.9, D: 0.9},
+    endovars={Win},
+    streq={Win: A + B + C + D >= 3}
 )
 CESM: [np.float64(0.44506684984947387), np.float64(0.2295767106364236)]
 NSM [np.float64(0.198286079872891), np.float64(0.32320172281111137)]
 ActualSEModel(
-	actuals={high, intermediate, Win, low},
-	exovars={high, intermediate, low},
+    actuals={high, intermediate, Win, low},
+    exovars={high, intermediate, low},
 .
 .
 .
@@ -120,14 +120,14 @@ Ipython can be started by typing `ipython` from the terminal. [Jupyter Lab](http
 
 **PyCharm**
 
-[PyCharm](https://www.jetbrains.com/pycharm/) can be useful as a heavy-weight replacement (storage space: 1.1G+!) for both ipython or jupyter-lab. 
+[PyCharm](https://www.jetbrains.com/pycharm/) can be useful as a heavy-weight replacement (storage space: 1.1G+!) for both ipython or jupyter-lab.
 
 **Emacs**
 
 All the above should be considered impoverished versions of [Emacs](https://www.gnu.org/software/emacs/tour/), which gets you:
 
 - [org-mode](https://orgmode.org/)
-- an interactive-REPL driven python development (need a simple demo video!) 
+- an interactive-REPL driven python development (need a simple demo video!)
 - [literate programming](https://www.howardism.org/Technical/Emacs/literate-programming-tutorial.html)
 
 One can get started through one of its community maintained [Starter Kits](https://github.com/emacs-tw/awesome-emacs?tab=readme-ov-file#starter-kit).
@@ -215,11 +215,11 @@ from sympy.abc import A, B, C, D, E, R, U
 from sympy import Symbol, symbols
 
 tadeg_example = ActualSEModel(
-	actuals = {A, B, C, E},
-	exovar_probs = {A: 0.1, B: 0.2, C: 0.4, D: 0.1},
-	streq = {
-		E: A & (B | C) & ~D
-	}
+    actuals = {A, B, C, E},
+    exovar_probs = {A: 0.1, B: 0.2, C: 0.4, D: 0.1},
+    streq = {
+        E: A & (B | C) & ~D
+    }
 )
 print(tadeg_example)
 print("CESM:", compute_cesm_preds(tadeg_example, [A], E, 0.7))
@@ -229,11 +229,11 @@ The above will print the following:
 
 ```
 ActualSEModel(
-	actuals={A, B, E, C},
-	exovars={A, B, C, D},
-	exovar_probs={A: 0.1, B: 0.2, C: 0.4, D: 0.1},
-	endovars={E},
-	streq={E: A & ~D & (B | C)}
+    actuals={A, B, E, C},
+    exovars={A, B, C, D},
+    exovar_probs={A: 0.1, B: 0.2, C: 0.4, D: 0.1},
+    endovars={E},
+    streq={E: A & ~D & (B | C)}
 )
 CESM: [np.float64(0.8817343989170583)]
 ```
@@ -261,7 +261,7 @@ In [1]: %load actual_causal_scenarios.py
 .
 .
 .
-   ...: 
+   ...:
 
 In [3]: compute_cesm_preds(tadeg_example, [A], E, 0.7)
 Out[3]: [np.float64(0.8815847792486272)]
@@ -270,18 +270,18 @@ In [4]: compute_nsm_preds(tadeg_example, [A], E, 0.7)
 Out[4]: [np.float64(0.947291404550097)]
 
 In [4]: compare_stability("cesm", tadeg_example, [B,D], E, [0.1, 0.5, 0.9], 100000, plot=True)
-Out[4]: 
+Out[4]:
 {0.1: [0.13621218857748088, 0.10773595682399688],
  0.5: [0.15434755362037963, 0.21211084515899076],
  0.9: [0.04779874182336246, 0.29568345646915256]}
 
 In [5]: compare_preds(["cesm", "nsm"], tadeg_example, [B,D], E, 0.7)
 ActualSEModel(
-	actuals={A, B, E, C},
-	exovars={A, B, D, C},
-	exovar_probs={A: 0.1, B: 0.2, C: 0.4, D: 0.1},
-	endovars={E},
-	streq={E: A & ~D & (B | C)}
+    actuals={A, B, E, C},
+    exovars={A, B, D, C},
+    exovar_probs={A: 0.1, B: 0.2, C: 0.4, D: 0.1},
+    endovars={E},
+    streq={E: A & ~D & (B | C)}
 )
 Respective causal strengths towards E
   of the causes [B, D] are:
