@@ -240,7 +240,7 @@ CESM: [np.float64(0.8817343989170583)]
 
 And plot the graph:
 
-![cesm\_example.svg](./cesm_example.svg)
+![tadeg\_example.svg](./tadeg_example.svg)
 
 #### Given scenarios
 
