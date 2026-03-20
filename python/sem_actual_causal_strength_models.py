@@ -3,7 +3,6 @@ import numpy.random as r
 import matplotlib.pyplot as plt
 from sympy import Symbol
 from structural_equation_model import ActualSEModel, compute_sem_preds
-from factual_difference_making import FDMModel
 from sys import platform
 from pprint import pp
 
@@ -13,16 +12,6 @@ np.set_printoptions(threshold=10)
 if platform == "darwin":
 	import matplotlib
 	matplotlib.use("qtagg")
-
-def as_cesmodel(model):
-	if type(model) == FDMModel:
-		return CESModel(
-			actuals = model.literals,
-			streq = model._streq,
-			exovar_probs = model.relative_normality
-		)
-	else:
-		raise Exception("as_cesmodel not implemented for", type(model))
 
 def compute_sampling_propensity(event:Symbol, prob:float, actuals:set, stability:float=None):
 	"""
